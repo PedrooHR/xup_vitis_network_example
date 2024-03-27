@@ -17,16 +17,23 @@ find_package(jsoncpp)
 
 if (jsoncpp_FOUND)
   add_library(vnx OBJECT src/cmac.cpp src/networklayer.cpp src/mac.cpp)
+  add_library(vnxsh SHARED src/cmac.cpp src/networklayer.cpp src/mac.cpp)
 
-  target_link_libraries(vnx PRIVATE jsoncpp_lib)
   get_target_property(JSON_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+  
+  target_link_libraries(vnx PRIVATE jsoncpp_lib)
   target_include_directories(vnx PRIVATE ${JSON_INC_PATH})
+
+  target_link_libraries(vnxsh PRIVATE jsoncpp_lib)
+  target_include_directories(vnxsh PRIVATE ${JSON_INC_PATH})
 else (jsoncpp_FOUND)
   message(WARNING "jsoncpp not found on the system, compiling vnx without mac address utilities.")
   add_library(vnx OBJECT src/cmac.cpp src/networklayer.cpp)
+  add_library(vnxsh SHARED src/cmac.cpp src/networklayer.cpp)
 endif (jsoncpp_FOUND)
 
 target_include_directories(vnx PUBLIC ${VNX_INCLUDE_PATH})
+target_include_directories(vnxsh PUBLIC ${VNX_INCLUDE_PATH})
 
 # XRT
 if (NOT EXISTS $ENV{XILINX_XRT})
@@ -36,3 +43,7 @@ endif ()
 target_link_directories(vnx PUBLIC $ENV{XILINX_XRT}/lib)
 target_link_libraries(vnx PUBLIC xilinxopencl xrt_coreutil xrt_core)
 target_include_directories(vnx PUBLIC $ENV{XILINX_XRT}/include)
+
+target_link_directories(vnxsh PUBLIC $ENV{XILINX_XRT}/lib)
+target_link_libraries(vnxsh PUBLIC xrt_coreutil xrt_core)
+target_include_directories(vnxsh PUBLIC $ENV{XILINX_XRT}/include)
