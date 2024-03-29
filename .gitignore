@@ -9,5 +9,7 @@ build*/
 *.xclbin
 basic.*/
 benchmark.*/
+ompcd1.*/
+ompcd2.*/
 __pycache__/
 *.jstack
