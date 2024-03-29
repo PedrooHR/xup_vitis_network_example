@@ -47,6 +47,7 @@ NETLAYERDIR = NetLayers/
 CMACDIR     = Ethernet/
 BASICDIR    = Basic_kernels/
 BENCHMARDIR = Benchmark_kernel/
+OMPCDIR 		= OMPC
 
 NETLAYERHLS = 100G-fpga-network-stack-core
 
@@ -75,9 +76,18 @@ ifeq (benchmark,$(DESIGN))
 	LIST_XO += $(BENCHMARDIR)$(TEMP_DIR)/collector.xo
 	LIST_XO += $(BENCHMARDIR)$(TEMP_DIR)/switch_wrapper.xo
 	LIST_REPOS += --user_ip_repo_paths $(SWITCH_IP_FOLDER)
-else
+else ifeq (basic,$(DESIGN))
 	LIST_XO += $(BASICDIR)$(TEMP_DIR)/krnl_mm2s.xo
 	LIST_XO += $(BASICDIR)$(TEMP_DIR)/krnl_s2mm.xo
+else ifeq (ompcd1,$(DESIGN))
+	LIST_XO += $(OMPCDIR)/s2s_send.xo
+	LIST_XO += $(OMPCDIR)/s2s_recv.xo
+	LIST_XO += $(OMPCDIR)/matmul_hw.xo
+	LIST_XO += $(OMPCDIR)/matadd_hw.xo
+else ifeq (ompcd2,$(DESIGN))
+	LIST_XO += $(OMPCDIR)/s2s_send.xo
+	LIST_XO += $(OMPCDIR)/s2s_recv.xo
+	LIST_XO += $(OMPCDIR)/matnorm_hw.xo
 endif
 
 # Linker parameters
@@ -107,6 +117,7 @@ distcleanall: distclean
 	make -C $(CMACDIR) distclean
 	make -C $(BASICDIR) distclean
 	make -C $(BENCHMARDIR) distclean
+	make -C $(OMPCDIR) distclean
 
 
 # Building xclbin
@@ -119,6 +130,9 @@ $(BASICDIR)$(TEMP_DIR)/%.xo: $(BASICDIR)src/*.cpp
 
 $(BENCHMARDIR)$(TEMP_DIR)/%.xo: $(BENCHMARDIR)src/*
 	make -C $(BENCHMARDIR) all DEVICE=$(DEVICE) -j3
+
+$(OMPCDIR)/%.xo: $(OMPCDIR)/src/*.cpp $(OMPCDIR)/application/*.cpp
+	make -C $(OMPCDIR) all DEVICE=$(DEVICE) -j3
 
 $(CMACDIR)$(TEMP_DIR)/%.xo:
 	make -C $(CMACDIR) all DEVICE=$(DEVICE) INTERFACE=$(INTERFACE)
@@ -151,7 +165,7 @@ endif
 
 #Check if the design name is supported
 check-design:
-	@if [[ ($(DESIGN) != "benchmark") && ($(DESIGN) != "basic") ]]; then\
+	@if [[ ($(DESIGN) != "benchmark") && ($(DESIGN) != "basic") && ($(DESIGN) != "ompcd1") && ($(DESIGN) != "ompcd2")]]; then\
 		echo "DESIGN=$(DESIGN) is not supported!";\
 		exit 1;\
 	fi
